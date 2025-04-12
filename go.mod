@@ -1,5 +1,5 @@
 // https://go.dev/doc/modules/gomod-ref
-module abstratium-informatique-sarl/stratis
+module github.com/abstratium-informatique-sarl/stratis
 
 go 1.24.2
 

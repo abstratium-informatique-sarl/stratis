@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"abstratium-informatique-sarl/stratis/pkg/logging"
+	"github.com/abstratium-informatique-sarl/stratis/pkg/logging"
 	"github.com/joho/godotenv"
 )
 
