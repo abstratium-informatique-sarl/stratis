@@ -9,7 +9,7 @@ func TestShortenString(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"abstratium.dev/tickets/framework/fwctx", "a.t.f.fwctx"},
+		{"abstratium.dev/someapp/package/subpackage", "a.s.p.subpackage"},
 		{"example.com/path/to/resource", "e.p.t.resource"},
 		{"single", "single"}, // No slashes
 		{"", ""},             // Empty string

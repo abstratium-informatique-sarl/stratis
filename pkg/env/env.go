@@ -12,10 +12,14 @@ import (
 const _PROD = "prod"
 var env string
 
-func Setup() {
+// Setup will load the environment variables from the .env file and the privateEnvFileLocation
+// privateEnvFileLocation is the path to the private environment variables file
+// e.g. it might live in your home folder, but basically anywhere outside of your repository, 
+// so that the secrets are not made public
+func Setup(privateEnvFileLocation string) {
 	log := logging.GetLog("env")
 
-	env = os.Getenv("TICKETS_ENV") // empty means prod
+	env = os.Getenv("STRATIS_ENV") // empty means prod
 
 	wd, _ := os.Getwd()
 	log.Info().Msgf("=======================================")
@@ -53,18 +57,17 @@ func Setup() {
 		panic(fmt.Sprintf("Error loading file '%s/.env': %+v\n", f, err))
 	}
 
-	// finally add /w/abstratium-tickets.env if present, as it holds secrets for when developing locally
-	filename := "/w/abstratium-tickets.env"
-	_, err = os.Stat(filename)
+	// finally add privateEnvFileLocation if present, as it holds secrets for when developing locally
+	_, err = os.Stat(privateEnvFileLocation)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Info().Msgf("skipping env file %s as it does not exist", filename)
+			log.Info().Msgf("skipping env file %s as it does not exist", privateEnvFileLocation)
 		} else {
-			panic(fmt.Sprintf("Error checking file '%s': %+v\n", filename, err))
+			panic(fmt.Sprintf("Error checking file '%s': %+v\n", privateEnvFileLocation, err))
 		}
 	} else {
-		log.Info().Msgf("loading (adding) env file %s", filename)
-		godotenv.Load(filename) // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults.
+		log.Info().Msgf("loading (adding) env file %s", privateEnvFileLocation)
+		godotenv.Load(privateEnvFileLocation) // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults.
 	}
 
 	if len(env) == 0 {
