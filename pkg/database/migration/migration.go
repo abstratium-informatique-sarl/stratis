@@ -3,8 +3,8 @@ package migration
 import (
 	"os"
 
-	"abstratium.dev/tickets/framework/database"
-	"abstratium.dev/tickets/framework/logging"
+	"github.com/abstratium-informatique-sarl/stratis/pkg/database"
+	"github.com/abstratium-informatique-sarl/stratis/pkg/logging"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"abstratium.dev/tickets/framework/fwctx"
-	"abstratium.dev/tickets/framework/logging"
+	"github.com/abstratium-informatique-sarl/stratis/pkg/fwctx"
+	"github.com/abstratium-informatique-sarl/stratis/pkg/logging"
 	"go.opentelemetry.io/otel"
 	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -23,7 +23,7 @@ import (
 	"gorm.io/plugin/prometheus"
 )
 
-const TICKETS_SKIP_DB = "TICKETS_SKIP_DB"
+const STRATIS_SKIP_DB = "STRATIS_SKIP_DB"
 
 var rawDb *sql.DB
 var db *gorm.DB
@@ -108,16 +108,16 @@ func GetDatabaseSourceName() string {
 }
 
 func GetDatabaseConfig() *mysql.Config {
-    username := os.Getenv("TICKETS_DB_USERNAME")
-    password := os.Getenv("TICKETS_DB_PASSWORD")
-    host := os.Getenv("TICKETS_DB_HOST")
-    name := os.Getenv("TICKETS_DB_NAME")
-    port := os.Getenv("TICKETS_DB_PORT")
+    username := os.Getenv("STRATIS_DB_USERNAME")
+    password := os.Getenv("STRATIS_DB_PASSWORD")
+    host := os.Getenv("STRATIS_DB_HOST")
+    name := os.Getenv("STRATIS_DB_NAME")
+    port := os.Getenv("STRATIS_DB_PORT")
 
     if len(username) == 0 {
         fmt.Printf("===== ENVS =====\n")
         for i, value := range os.Environ() {
-            if strings.Contains(value, "TICKETS") {
+            if strings.Contains(value, "STRATIS") {
                 fmt.Printf("ENV %d) %s\n", i, value)
             }
         } 
@@ -172,8 +172,8 @@ func setupRawDb() bool {
     log.Debug().Msgf(" DB ENV")
     log.Debug().Msgf(" ")
 
-    if os.Getenv(TICKETS_SKIP_DB) == "true" {
-        log.Debug().Msgf("Skipping DB setup because TICKETS_SKIP_DB is set to true")
+    if os.Getenv(STRATIS_SKIP_DB) == "true" {
+        log.Debug().Msgf("Skipping DB setup because STRATIS_SKIP_DB is set to true")
         log.Debug().Msgf("=======================================")
         return false
     } else {
