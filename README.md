@@ -16,7 +16,7 @@ Builds upon [Gin](https://github.com/gin-gonic/gin) and [GORM](https://github.co
 ## Usage
 
 ```sh
-go get github.com/abstratium-informatique-sarl/stratis@v0.0.8
+go get github.com/abstratium-informatique-sarl/stratis@v0.0.9
 
 # or
 

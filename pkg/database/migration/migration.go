@@ -23,8 +23,8 @@ func init() {
 }
 
 func Migrate() {
-    if os.Getenv(database.TICKETS_SKIP_DB) == "true" {
-        log.Info().Msgf("Skipping DB migrations because %s is set to true", database.TICKETS_SKIP_DB)
+    if os.Getenv(database.STRATIS_SKIP_DB) == "true" {
+        log.Info().Msgf("Skipping DB migrations because %s is set to true", database.STRATIS_SKIP_DB)
         return
     }
     log.Info().Msg("Starting DB migrations...")
@@ -58,7 +58,7 @@ func Migrate() {
     // Print the working directory.
     log.Info().Msgf("Working directory: %s", dir)
 
-    migLoc := os.Getenv("TICKETS_DB_MIGRATION_LOCATION")
+    migLoc := os.Getenv("STRATIS_DB_MIGRATION_LOCATION")
     if len(migLoc) == 0 {
         log.Fatal().Msg("Please set the migration location env var")
     }

@@ -21,14 +21,16 @@ var log = logging.GetLog("fwmetrics")
 //   overestimate, and not directly comparable to system CPU time
 //   measurements. Compare only with other /cpu/classes metrics.
 //   Sum of all metrics in /cpu/classes/scavenge.
-var totalCpuSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
-	Name: "tickets_total_cpu_seconds",
-	Help: "The total number of seconds the CPU has been used, an overestimate",
-},[]string{})
-
 var metricsTicker *time.Ticker
 
-func Setup() {
+var totalCpuSeconds *prometheus.CounterVec
+
+func Setup(prefix string) {
+	totalCpuSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: prefix + "_total_cpu_seconds",
+		Help: "The total number of seconds the CPU has been used, an overestimate",
+	},[]string{})
+	
     go func() {
 		last := setTotalCpuSeconds(0.0)
         metricsTicker = time.NewTicker(10 * time.Second) // frequency matches scrape rate
