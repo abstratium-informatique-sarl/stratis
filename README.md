@@ -13,6 +13,14 @@ Builds upon [Gin](https://github.com/gin-gonic/gin) and [GORM](https://github.co
 - database (mysql)
 - oauth authentication & authorization
 
+## Usage
+
+```go
+import "github.com/abstratium-informatique-sarl/stratis/pkg/env"
+
+env.Setup("/path-to-file-containing-secrets.env")
+```
+
 ## Roadmap
 
 - tracing
