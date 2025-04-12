@@ -55,3 +55,7 @@ ssh-add /.../abs.key
 export VERS=0.0.x
 git add --all && git commit -a -m'<comment>' && git tag v${VERS} && git push origin main v${VERS}
 ```
+
+## TODO
+
+- add using https://pkg.go.dev/about#adding-a-package
