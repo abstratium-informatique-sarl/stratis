@@ -15,6 +15,10 @@ Builds upon [Gin](https://github.com/gin-gonic/gin) and [GORM](https://github.co
 
 ## Usage
 
+```sh
+go get github.com/abstratium-informatique-sarl/stratis@v0.0.4
+```
+
 ```go
 import "github.com/abstratium-informatique-sarl/stratis/pkg/env"
 
