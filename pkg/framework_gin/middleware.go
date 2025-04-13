@@ -148,11 +148,11 @@ func SecurityMiddleware(rolesAllowed []string) gin.HandlerFunc {
 // into the user object. YOU MUST CHECK THAT THE TOKEN IS VALID and that it exists, otherwise your application is
 // liable to BEING INSECURE.
 // ================================================================================================================================
-func ServiceUserSecurityMiddleware(contextProvider func(fwctx.ICtx, string) (jwt.UserContext, error)) gin.HandlerFunc {
-    return securityMiddleware("service-user-sec-middleware", []string{fwctx.APPLICATION_SERVICE_USER}, contextProvider)
+func ServiceUserSecurityMiddleware(contextProvider func(fwctx.ICtx, string) (jwt.UserContext, string, string, []string, error), rolesAllowed []string) gin.HandlerFunc {
+    return securityMiddleware("service-user-sec-middleware", rolesAllowed, contextProvider)
 }
 
-func securityMiddleware(logName string, roles []string, contextProvider func(fwctx.ICtx, string) (jwt.UserContext, error)) gin.HandlerFunc {
+func securityMiddleware(logName string, roles []string, contextProvider func(fwctx.ICtx, string) (jwt.UserContext, string, string, []string, error)) gin.HandlerFunc {
     secLog := logging.GetLog(logName)
     return func(c *gin.Context) {
         ctx := fwctx.BuildTypedCtx(c, contextProvider)

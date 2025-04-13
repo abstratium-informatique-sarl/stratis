@@ -60,13 +60,16 @@ var highestId int = 0
 
 var ErrorTokenNotFound = errors.New("STRATIS-1002 no valid matching token found")
 var ErrorTokenWrong = errors.New("STRATIS-1001 token and hash do not match")
+
 type ctx struct {
 	id int
 	ginCtx *gin.Context
-	contextProvider func(ICtx, string) (jwt.UserContext, error)
+	
+	// a function that provides the context if any, userId, userName, roles, or an error.
+	contextProvider func(ICtx, string) (jwt.UserContext, string, string, []string, error)
 }
 
-func(c *ctx) setContextProviderIfNotSet(contextProvider func(ICtx, string) (jwt.UserContext, error)) {
+func(c *ctx) setContextProviderIfNotSet(contextProvider func(ICtx, string) (userContext jwt.UserContext, userId string, userName string, roles []string, err error)) {
 	if c.contextProvider == nil {
 		c.contextProvider = contextProvider // reset the context in case one has now been provided
 	}
@@ -158,10 +161,13 @@ func (c *ctx) GetUser() (*jwt.User, error) {
 					err = fmt.Errorf("STRATIS-1000 contextProvider is nil but must be set for calls coming from %s %s. This is a bug, please inform an administrator", c.ginCtx.Request.Method, c.ginCtx.Request.RequestURI)
 				} else {
 					var userContext jwt.UserContext
-					userContext, err = c.contextProvider(c, tokenList[0])
+					var roles []string
+					var userId string
+					var userName string
+					userContext, userId, userName, roles, err = c.contextProvider(c, tokenList[0])
 					if err == nil {
 						expires := float64(time.Now().Add(5*time.Minute).Unix())
-						user = &jwt.User{Username: APPLICATION_SERVICE_USER, UserId: APPLICATION_SERVICE_USER, Expires: expires, Roles: []string{APPLICATION_SERVICE_USER}, UserContext: userContext}
+						user = &jwt.User{Username: userName, UserId: userId, Expires: expires, Roles: roles, UserContext: userContext}
 					}
 				}
 			}
@@ -205,7 +211,7 @@ func UserHasARole(rolesAllowed []string, user *jwt.User) bool {
 	return false
 }
 
-func BuildTypedCtx(c *gin.Context, contextProvider func(ICtx, string) (jwt.UserContext, error)) ICtx {
+func BuildTypedCtx(c *gin.Context, contextProvider func(ICtx, string) (jwt.UserContext, string, string, []string, error)) ICtx {
 	// reuse the wrapper if it is already in the gin context
 	key := "fwctx"
 	a, exists := c.Get(key)

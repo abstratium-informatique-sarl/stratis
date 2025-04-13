@@ -29,6 +29,17 @@ import "github.com/abstratium-informatique-sarl/stratis/pkg/env"
 env.Setup("/path-to-file-containing-secrets.env")
 ```
 
+## Documentation
+
+- [security](docs/security.md)
+- [env](pkg/env/env.go)
+- [logging](pkg/logging/logging.go)
+- [metrics](pkg/metrics/metrics.go)
+- [database](pkg/database/database.go)
+- [fwctx](pkg/fwctx/context.go)
+- [framework_gin](pkg/framework_gin/framework_gin.go)
+- [migration](pkg/migration/migration.go)
+
 ## Roadmap
 
 - tracing
