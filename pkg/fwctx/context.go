@@ -28,7 +28,6 @@ import (
 
 const TOKEN_COOKIE_NAME = "token"
 const _USER_KEY = "user"
-const APPLICATION_SERVICE_USER = "asu"
 
 // a stateless wrapper around gin.Context providing useful methods like SetDb() and GetDb() in order to 
 // access the DB connection, and IsRollbackOnly() and SetRollbackOnly() to control the transactional state,

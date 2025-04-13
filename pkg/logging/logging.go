@@ -27,7 +27,7 @@ func readLevels() map[string]string {
 					if err != nil {
 						data, err = os.ReadFile("/root/log-config.json") // prod, since the first attempt failed
 						if err != nil {
-							panic(err)
+							panic(fmt.Errorf("failed to read log config: %w", err))
 						}
 					}
 				}
@@ -39,7 +39,7 @@ func readLevels() map[string]string {
 	config := make(map[string]string)
 	err = json.Unmarshal(data, &config)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to read log config: %w", err))
 	}
 
 	fmt.Println("logging config is " + fmt.Sprintf("%s", config))
