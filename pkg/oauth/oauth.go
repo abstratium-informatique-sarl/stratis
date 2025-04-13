@@ -54,9 +54,17 @@ type SignInRequest struct {
 
 var stateCache map[string]*State = make(map[string]*State)
 
-func Setup() {
+var _useGoogle bool
+var _useMicrosoft bool
+var _useOwn bool
+
+func Setup(useGoogle bool, useMicrosoft bool, useOwn bool) {
 	log := logging.GetLog("oauth")
 
+	_useGoogle = useGoogle
+	_useMicrosoft = useMicrosoft
+	_useOwn = useOwn
+	
 	// ///////////////////////////////////////////////////////////////////////////
 	// check we have all the env vars in order to do oauth
 	//   - fail fast, rather than the fist time a user tries to sign in
@@ -67,28 +75,37 @@ func Setup() {
 
 	getUseSecureCookies()
 
-	gUserInfoUrl := os.Getenv(_STRATIS_OAUTH_G_USERINFO_URL_ENV_NAME)
-	if len(gUserInfoUrl) == 0 {
-		panic("please set env var for oauth google user info url")
+	if _useGoogle {
+		gUserInfoUrl := os.Getenv(_STRATIS_OAUTH_G_USERINFO_URL_ENV_NAME)
+		if len(gUserInfoUrl) == 0 {
+			panic("please set env var for oauth google user info url")
+		}
 	}
 
-	mUserInfoUrl := os.Getenv(_STRATIS_OAUTH_M_USERINFO_URL_ENV_NAME)
-	if len(mUserInfoUrl) == 0 {
-		panic("please set env var for oauth microsoft user info url")
+	if _useMicrosoft {
+		mUserInfoUrl := os.Getenv(_STRATIS_OAUTH_M_USERINFO_URL_ENV_NAME)
+		if len(mUserInfoUrl) == 0 {
+			panic("please set env var for oauth microsoft user info url")
+		}
 	}
 
 	log.Debug().Msgf("=======================================")
 	log.Debug().Msgf(" OAUTH ENV")
 	log.Debug().Msgf(" ")
-	log.Debug().Msgf("STRATIS_OAUTH_G_REDIRECT_URL=%s", os.Getenv("STRATIS_OAUTH_G_REDIRECT_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_G_AUTH_URL=%s", os.Getenv("STRATIS_OAUTH_G_AUTH_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_G_TOKEN_URL=%s", os.Getenv("STRATIS_OAUTH_G_TOKEN_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_G_USERINFO_URL=%s", os.Getenv("STRATIS_OAUTH_G_USERINFO_URL"))
-	log.Debug().Msg("----")
-	log.Debug().Msgf("STRATIS_OAUTH_M_REDIRECT_URL=%s", os.Getenv("STRATIS_OAUTH_M_REDIRECT_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_M_AUTH_URL=%s", os.Getenv("STRATIS_OAUTH_M_AUTH_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_M_TOKEN_URL=%s", os.Getenv("STRATIS_OAUTH_M_TOKEN_URL"))
-	log.Debug().Msgf("STRATIS_OAUTH_M_USERINFO_URL=%s", os.Getenv("STRATIS_OAUTH_M_USERINFO_URL"))
+	if _useGoogle {
+		log.Debug().Msgf("STRATIS_OAUTH_G_REDIRECT_URL=%s", os.Getenv("STRATIS_OAUTH_G_REDIRECT_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_G_AUTH_URL=%s", os.Getenv("STRATIS_OAUTH_G_AUTH_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_G_TOKEN_URL=%s", os.Getenv("STRATIS_OAUTH_G_TOKEN_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_G_USERINFO_URL=%s", os.Getenv("STRATIS_OAUTH_G_USERINFO_URL"))
+	}
+
+	if _useMicrosoft {
+		log.Debug().Msg("----")
+		log.Debug().Msgf("STRATIS_OAUTH_M_REDIRECT_URL=%s", os.Getenv("STRATIS_OAUTH_M_REDIRECT_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_M_AUTH_URL=%s", os.Getenv("STRATIS_OAUTH_M_AUTH_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_M_TOKEN_URL=%s", os.Getenv("STRATIS_OAUTH_M_TOKEN_URL"))
+		log.Debug().Msgf("STRATIS_OAUTH_M_USERINFO_URL=%s", os.Getenv("STRATIS_OAUTH_M_USERINFO_URL"))
+	}
 }
 
 // AddAll adds all the oauth endpoints. 
@@ -96,26 +113,34 @@ func Setup() {
 // - an `Account` object
 // - an `error` if something went wrong, which can also be `gorm.ErrRecordNotFound` if the user does not exist
 func AddAll(router *gin.Engine, accountProvider func(fwctx.ICtx, string) (Account, error)) {
-	// TODO belongs in a boundary package!
-	// @Path("/oauth")
-	router.Group("/oauth").
-		// @Transactional(REQUIRED)
-		Use(framework_gin.NonTxMiddleware()).
-		GET("/sign-in/g", getSignInGoogle).
-		POST("/sign-in/o", func(c *gin.Context) {
-			getSignInOwn(c, accountProvider)
-		}).
-		GET("/g/redirect", func(c *gin.Context) {
+	api := router.Group("/oauth").
+		Use(framework_gin.NonTxMiddleware())
+
+	if _useGoogle {
+		api.GET("/sign-in/g", getSignInGoogle)
+		api.GET("/g/redirect", func(c *gin.Context) {
 			getRedirect(c, "google", accountProvider)
-		}).
-		GET("/m/redirect", func(c *gin.Context) {
+		})
+	}
+	
+	if _useMicrosoft {
+		api.GET("/sign-in/m", getSignInMicrosoft)
+		api.GET("/m/redirect", func(c *gin.Context) {
 			getRedirect(c, "microsoft", accountProvider)
-		}).
-		POST("/o/redirect", func(c *gin.Context) { // post, since js fetch will do the same method as was used for the query that caused the redirect
+		})
+	}
+
+	if _useOwn {
+		api.POST("/sign-in/o", func(c *gin.Context) {
+			getSignInOwn(c, accountProvider)
+		})
+		api.POST("/o/redirect", func(c *gin.Context) { // post, since js fetch will do the same method as was used for the query that caused the redirect
 			getRedirect(c, "own", accountProvider)
-		}).
-		GET("/user", GetUser).
-		GET("/sign-out", getSignOut)
+		})
+	}
+
+	api.GET("/user", GetUser)
+	api.GET("/sign-out", getSignOut)
 }
 
 func getSignInOwn(c *gin.Context, accountProvider func(fwctx.ICtx, string) (Account, error)) {
@@ -182,6 +207,10 @@ func AddState(state *State){
 
 func getSignInGoogle(c *gin.Context) {
 	getSignIn(c, getGoogleOAuthConfig())
+}
+
+func getSignInMicrosoft(c *gin.Context) {
+	getSignIn(c, getMicrosoftOAuthConfig())
 }
 
 // https://pkg.go.dev/golang.org/x/oauth2#example-Config
@@ -285,7 +314,7 @@ func getRedirect(c *gin.Context, provider string, accountProvider func(fwctx.ICt
 	// TODO use `tok.RefreshToken`
 
 	username := "unknown"
-	if provider == "google" {
+	if provider == "google" && _useGoogle {
 		client := config.Client(ctxForTokenExchange, tok)
 		url := os.Getenv(_STRATIS_OAUTH_G_USERINFO_URL_ENV_NAME)
 		userResponse, err := client.Get(url)
@@ -309,7 +338,7 @@ func getRedirect(c *gin.Context, provider string, accountProvider func(fwctx.ICt
 			return
 		}
 		username = o.Email
-	} else if provider == "microsoft" {
+	} else if provider == "microsoft" && _useMicrosoft {
 		client := config.Client(ctxForTokenExchange, tok)
 		userResponse, err := client.Get(os.Getenv(_STRATIS_OAUTH_M_USERINFO_URL_ENV_NAME))
 		if err != nil {
@@ -334,10 +363,10 @@ func getRedirect(c *gin.Context, provider string, accountProvider func(fwctx.ICt
 			return
 		}
 		username = o.Login + "#microsoft" // to make it unique across all providers
-	} else if provider == "own" {
+	} else if provider == "own" && _useOwn {
 		username = state.Context["username"]
 	} else {
-		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("STRATIS-1008 %s", provider))
+		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("STRATIS-1008 %s, %v/%v/%v", provider, _useGoogle, _useMicrosoft, _useOwn))
 		return
 	}
 
@@ -413,8 +442,10 @@ func getGoogleOAuthConfig() *oauth2.Config {
 	authUrl := os.Getenv("STRATIS_OAUTH_G_AUTH_URL")
 	tokenUrl := os.Getenv("STRATIS_OAUTH_G_TOKEN_URL")
 
-	if len(clientId) != 0 {
-		if len(clientSecret) == 0 {
+	if _useGoogle {
+		if len(clientId) == 0 {
+			panic("please set env var for oauth google client id")
+		} else if len(clientSecret) == 0 {
 			panic("please set env var for oauth google client secret")
 		} else if len(redirectUrl) == 0 {
 			panic("please set env var for oauth google redirect url")
@@ -446,8 +477,10 @@ func getMicrosoftOAuthConfig() *oauth2.Config {
 	authUrl := os.Getenv("STRATIS_OAUTH_M_AUTH_URL")
 	tokenUrl := os.Getenv("STRATIS_OAUTH_M_TOKEN_URL")
 
-	if len(clientId) != 0 {
-		if len(clientSecret) == 0 {
+	if _useMicrosoft {
+		if len(clientId) == 0 {
+			panic("please set env var for oauth microsoft client id")
+		} else if len(clientSecret) == 0 {
 			panic("please set env var for oauth microsoft client secret")
 		} else if len(redirectUrl) == 0 {
 			panic("please set env var for oauth microsoft redirect url")
