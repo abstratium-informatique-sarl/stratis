@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/abstratium-informatique-sarl/stratis/pkg/logging"
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const totalCpuSecondsMetricName = "/cpu/classes/scavenge/total:cpu-seconds"
@@ -38,6 +40,16 @@ func Setup(prefix string) {
 			last = setTotalCpuSeconds(last)
         }
     }()
+}
+
+func AddAll(router *gin.Engine) {
+    // standard prometheus metrics - different endpoint, since we want to scrape these more frequently.
+    // note that we also configure metrics in middelware.go, where we set up tracking http calls, 
+    // as well as in database.go where we set up gorm metrics
+    promHandler := promhttp.Handler()
+    router.Handle("GET", "/metrics-prom", func(c *gin.Context) {
+        promHandler.ServeHTTP(c.Writer, c.Request)
+    })
 }
 
 func setTotalCpuSeconds(last float64) float64 {
