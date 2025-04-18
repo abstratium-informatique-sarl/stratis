@@ -42,7 +42,7 @@ type ICtx interface {
 	QueryParamAsBooleanWithDefault(string, bool) bool
 	QueryParamAsString(string) string
 	QueryParamAsInt(string) (int, error)
-	RequestBodyAsString() error
+	RequestBodyAsString() (string, error)
 	UnmarshalRequestBody(o any) error
 	GetUser() (*jwt.User, error)
 	UserHasARole(rolesAllowed []string) (bool, error)
