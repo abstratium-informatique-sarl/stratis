@@ -135,28 +135,13 @@ func NonTxMiddleware() gin.HandlerFunc {
 
 // ================================================================================================================================
 // security middleware that ensures the user in the ICtx has one of the required roles which ultimately comes out of 
-// a JWT that has been verified.
+// a JWT that has been verified. An optional contextProvider can be provided to handle service users.
 // ================================================================================================================================
-func SecurityMiddleware(rolesAllowed []string) gin.HandlerFunc {
-    return securityMiddleware("sec-middleware", rolesAllowed, nil)
-}
-
-// ================================================================================================================================
-// security middleware for service users. works differently than SecurityMiddleware, in that it isn't based
-// on a JWT rather it is based on a token which your application can create, and which is interpreted by
-// the contextProvider to ensure it is valid, and using it, your application can then provide a context that is set 
-// into the user object. YOU MUST CHECK THAT THE TOKEN IS VALID and that it exists, otherwise your application is
-// liable to BEING INSECURE.
-// ================================================================================================================================
-func ServiceUserSecurityMiddleware(contextProvider func(fwctx.ICtx, string) (jwt.UserContext, string, string, []string, error), rolesAllowed []string) gin.HandlerFunc {
-    return securityMiddleware("service-user-sec-middleware", rolesAllowed, contextProvider)
-}
-
-func securityMiddleware(logName string, roles []string, contextProvider func(fwctx.ICtx, string) (jwt.UserContext, string, string, []string, error)) gin.HandlerFunc {
-    secLog := logging.GetLog(logName)
+func SecurityMiddleware(rolesAllowed []string, contextProvider func(fwctx.ICtx, string) (jwt.UserContext, string, string, []string, error)) gin.HandlerFunc {
+    secLog := logging.GetLog("sec-middleware")
     return func(c *gin.Context) {
         ctx := fwctx.BuildTypedCtx(c, contextProvider)
-        ok, err := ctx.UserHasARole(roles)
+        ok, err := ctx.UserHasARole(rolesAllowed)
         if err != nil {
             if errors.Is(err, fwctx.ErrorTokenNotFound) || errors.Is(err, fwctx.ErrorTokenWrong) {
                 c.AbortWithError(http.StatusUnauthorized, err)
