@@ -79,6 +79,10 @@ func (c *ctxWithOnlyDb) QueryParamAsInt(name string) (int, error) {
 	panic("not supported")
 }
 
+func (c *ctxWithOnlyDb) RequestBodyAsString() (string, error) {
+	panic("not supported")
+}
+
 func (c *ctxWithOnlyDb) UnmarshalRequestBody(a any) error {
 	panic("not supported")
 }

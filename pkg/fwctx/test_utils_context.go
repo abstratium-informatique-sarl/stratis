@@ -71,6 +71,10 @@ func (c *testCtx) QueryParamAsInt(name string) (int, error) {
 	return 0, nil
 }
 
+func (c *testCtx) RequestBodyAsString() (string, error) {
+	panic("not supported yet")
+}
+
 func (c *testCtx) UnmarshalRequestBody(a any) error {
 	panic("not supported yet")
 }

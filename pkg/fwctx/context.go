@@ -42,6 +42,7 @@ type ICtx interface {
 	QueryParamAsBooleanWithDefault(string, bool) bool
 	QueryParamAsString(string) string
 	QueryParamAsInt(string) (int, error)
+	RequestBodyAsString() error
 	UnmarshalRequestBody(o any) error
 	GetUser() (*jwt.User, error)
 	UserHasARole(rolesAllowed []string) (bool, error)
@@ -123,6 +124,12 @@ func (c *ctx) QueryParamAsString(name string) string {
 func (c *ctx) QueryParamAsInt(name string) (int, error) {
 	i, e := strconv.ParseInt(c.ginCtx.Query(name), 10, 32)
 	return int(i), e
+}
+
+func (c *ctx) RequestBodyAsString() (string, error) {
+	defer c.ginCtx.Request.Body.Close()
+	reqBody, err := io.ReadAll(c.ginCtx.Request.Body)
+	return string(reqBody), err
 }
 
 func (c *ctx) UnmarshalRequestBody(a any) error {
